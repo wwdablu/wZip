@@ -15,7 +15,6 @@ import com.wwdablu.soumya.wzip.WZip;
 import com.wwdablu.soumya.wzip.WZipCallback;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.LinkedList;
@@ -97,7 +96,7 @@ public class MainActivity extends AppCompatActivity implements WZipCallback {
         //Wait for 1500 msec to test unzip ops
         new Handler(MainActivity.this.getMainLooper()).postDelayed(() -> {
             WZip wZip = new WZip();
-            showToast("File count: " + wZip.getFilesInZip(zipFile).size());
+            showToast("File count: " + wZip.getFilesInfoFromZip(zipFile).size());
             wZip.unzip(zipFile,
                     new File(Environment.getExternalStorageDirectory().getAbsolutePath()),
                     "unzip",

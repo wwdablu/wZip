@@ -43,7 +43,7 @@ public class WZip {
      * @param zipFile Zip file
      * @return List of files with their details
      */
-    public List<ZipEntry> getFilesInZip(@NonNull File zipFile) {
+    public List<ZipEntry> getFilesInfoFromZip(@NonNull File zipFile) {
 
         LinkedList<ZipEntry> fileList = new LinkedList<>();
         ZipInputStream zipInputStream = null;
