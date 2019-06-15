@@ -14,7 +14,7 @@ dependencies {
 wZip library provides only 3 methods as of now. These methods are:  
 * zip  
 * unzip  
-* getFilesInZip  
+* getFilesInfoFromZip - Provides the file entry information  
 
 The process to generate a zip archive is to provide the list of files and the destination where the zip is to be generated.  
 ~~~  
