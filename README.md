@@ -1,3 +1,5 @@
+[![](https://jitpack.io/v/wwdablu/wZip.svg)](https://jitpack.io/#wwdablu/wZip)  
+
 # wZip
 An android library the provides zip and unzip functionality. This uses the default implementation of ZipInputStream and ZipOutputStream to read and generate the zip files.  
 
