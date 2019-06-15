@@ -34,6 +34,8 @@ class WUnzipWorker extends Thread {
 
         try {
 
+            mCallback.onStarted(mWorkerIdentifier);
+
             zipInputStream = new ZipInputStream(new FileInputStream(mZipFile));
             ZipEntry zipEntry = zipInputStream.getNextEntry();
 
