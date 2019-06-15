@@ -11,8 +11,6 @@ import java.util.zip.ZipInputStream;
 
 class WUnzipWorker extends Thread {
 
-    private static final int BUFFER = 256 * 1024;
-
     private File mZipFile;
     private File mDestinationFolder;
     private String mWorkerIdentifier;
@@ -39,16 +37,14 @@ class WUnzipWorker extends Thread {
             zipInputStream = new ZipInputStream(new FileInputStream(mZipFile));
             ZipEntry zipEntry = zipInputStream.getNextEntry();
 
-            byte[] data = new byte[BUFFER];
-
             while (zipEntry != null) {
 
-                FileOutputStream fos = new FileOutputStream(mDestinationFolder.getAbsolutePath() + zipEntry.getName());
-                int size = zipInputStream.read(data);
+                FileOutputStream fos = new FileOutputStream(mDestinationFolder.getAbsolutePath() + File.separator + zipEntry.getName());
+                int size = zipInputStream.read();
 
                 while (size != -1) {
-                    fos.write(data);
-                    size = zipInputStream.read(data);
+                    fos.write(size);
+                    size = zipInputStream.read();
                 }
 
                 fos.close();

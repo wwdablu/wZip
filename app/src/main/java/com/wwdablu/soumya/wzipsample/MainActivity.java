@@ -2,6 +2,8 @@ package com.wwdablu.soumya.wzipsample;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.os.Environment;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -9,7 +11,14 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.Toast;
 
+import com.wwdablu.soumya.wzip.WZip;
 import com.wwdablu.soumya.wzip.WZipCallback;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.LinkedList;
 
 public class MainActivity extends AppCompatActivity implements WZipCallback {
 
@@ -26,6 +35,8 @@ public class MainActivity extends AppCompatActivity implements WZipCallback {
                     Manifest.permission.READ_EXTERNAL_STORAGE,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE
             }, 1000);
+        } else {
+            prepare();
         }
     }
 
@@ -41,25 +52,95 @@ public class MainActivity extends AppCompatActivity implements WZipCallback {
             Toast.makeText(this, "Need read and write permission to continue.", Toast.LENGTH_SHORT).show();
             return;
         }
+
+        prepare();
+    }
+
+    private void prepare() {
+        createDummyFiles(2);
+
+        File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath());
+        File[] files = file.listFiles();
+        LinkedList<File> fileList = new LinkedList<>();
+        for (File f : files) {
+
+            if(f.getName().contains("test_") && f.getName().endsWith(".txt")) {
+                fileList.add(f);
+            }
+        }
+
+        WZip wZip = new WZip();
+        wZip.zip(fileList,
+                new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "test.zip"),
+                "zip",
+                this);
     }
 
     @Override
     public void onStarted(String identifier) {
-
+        showToast("Started: " + identifier);
     }
 
     @Override
-    public void onZipCompleted(String identifier) {
+    public void onZipCompleted(File zipFile, String identifier) {
+        showToast("Zip ops completed for identifier " + identifier);
 
+        File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath());
+        File[] files = file.listFiles();
+        for (File f : files) {
+
+            if(f.getName().contains("test_") && f.getName().endsWith(".txt")) {
+                f.delete();
+            }
+        }
+
+        //Wait for 1500 msec to test unzip ops
+        new Handler(MainActivity.this.getMainLooper()).postDelayed(() -> {
+            WZip wZip = new WZip();
+            showToast("File count: " + wZip.getFilesInZip(zipFile).size());
+            wZip.unzip(zipFile,
+                    new File(Environment.getExternalStorageDirectory().getAbsolutePath()),
+                    "unzip",
+                    MainActivity.this);
+        }, 1500);
     }
 
     @Override
     public void onUnzipCompleted(String identifier) {
-
+        showToast("Unzip ops completed for " + identifier);
     }
 
     @Override
     public void onError(Throwable throwable, String identifier) {
+        showToast(throwable.getMessage());
+    }
 
+    private void showToast(String text) {
+        runOnUiThread(() -> Toast.makeText(MainActivity.this, text, Toast.LENGTH_SHORT).show());
+    }
+
+    private void createDummyFiles(final int count) {
+
+        int fileIndex = 0;
+        while (fileIndex != count) {
+
+            try {
+                FileOutputStream fos = new FileOutputStream(new File(
+                        Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "test_" + fileIndex + ".txt"));
+
+                byte[] data = ("This is a string test." + fileIndex).getBytes();
+                int repeat = 1000;
+                while (--repeat != 0) {
+                    fos.write(data);
+                }
+
+                fos.close();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            fileIndex++;
+        }
     }
 }

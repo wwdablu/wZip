@@ -62,7 +62,7 @@ class WZipWorker extends Thread {
                 bufferedInputStream.close();
             }
 
-            mCallback.onZipCompleted(mWorkerId);
+            mCallback.onZipCompleted(mDestination, mWorkerId);
 
         } catch (Throwable throwable) {
             mCallback.onError(throwable, mWorkerId);
