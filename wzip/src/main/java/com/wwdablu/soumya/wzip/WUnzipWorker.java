@@ -1,6 +1,8 @@
 package com.wwdablu.soumya.wzip;
 
-import android.support.annotation.NonNull;
+
+
+import androidx.annotation.NonNull;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -9,22 +11,14 @@ import java.io.IOException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-class WUnzipWorker extends Thread {
-
-    private File mZipFile;
-    private File mDestinationFolder;
-    private String mWorkerIdentifier;
-    private WZipCallback mCallback;
+class WUnzipWorker extends BaseWorker {
 
     WUnzipWorker(@NonNull File zipFile,
                  @NonNull File destinationFolder,
                  @NonNull String workerIdentifier,
                  @NonNull WZipCallback callback) {
 
-        mZipFile = zipFile;
-        mDestinationFolder = destinationFolder;
-        mWorkerIdentifier = workerIdentifier;
-        mCallback = callback;
+        super(zipFile, destinationFolder, workerIdentifier, callback);
     }
 
     @Override
@@ -35,6 +29,7 @@ class WUnzipWorker extends Thread {
         try {
 
             mCallback.onStarted(mWorkerIdentifier);
+            createDestinationFolderIfMissing(mDestinationFolder);
 
             zipInputStream = new ZipInputStream(new FileInputStream(mZipFile));
             ZipEntry zipEntry = zipInputStream.getNextEntry();

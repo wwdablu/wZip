@@ -4,12 +4,14 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Environment;
 import android.os.Handler;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.wwdablu.soumya.wzip.WZip;
 import com.wwdablu.soumya.wzip.WZipCallback;
@@ -56,9 +58,12 @@ public class MainActivity extends AppCompatActivity implements WZipCallback {
     }
 
     private void prepare() {
-        createDummyFiles(2);
 
-        File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath());
+        //Create dummy files for testing
+        createDummyFiles();
+
+        //Fetch the list of files that needs to be zipped
+        File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "misdir");
         File[] files = file.listFiles();
         LinkedList<File> fileList = new LinkedList<>();
         for (File f : files) {
@@ -68,21 +73,22 @@ public class MainActivity extends AppCompatActivity implements WZipCallback {
             }
         }
 
+        //Perform the zip operation
         WZip wZip = new WZip();
         wZip.zip(fileList,
-                new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "test.zip"),
+                new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "misdir" + File.separator + "test.zip"),
                 "zip",
                 this);
     }
 
     @Override
     public void onStarted(String identifier) {
-        showToast("Started: " + identifier);
+        Log.d(MainActivity.class.getSimpleName(), "Started: " + identifier);
     }
 
     @Override
     public void onZipCompleted(File zipFile, String identifier) {
-        showToast("Zip ops completed for identifier " + identifier);
+        Log.d(MainActivity.class.getSimpleName(), "Zip ops completed for identifier " + identifier);
 
         File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath());
         File[] files = file.listFiles();
@@ -96,9 +102,9 @@ public class MainActivity extends AppCompatActivity implements WZipCallback {
         //Wait for 1500 msec to test unzip ops
         new Handler(MainActivity.this.getMainLooper()).postDelayed(() -> {
             WZip wZip = new WZip();
-            showToast("File count: " + wZip.getFilesInfoFromZip(zipFile).size());
+            Log.d(MainActivity.class.getSimpleName(), "File count: " + wZip.getFilesInfoFromZip(zipFile).size());
             wZip.unzip(zipFile,
-                    new File(Environment.getExternalStorageDirectory().getAbsolutePath()),
+                    new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "misdirunzip"),
                     "unzip",
                     MainActivity.this);
         }, 1500);
@@ -106,26 +112,33 @@ public class MainActivity extends AppCompatActivity implements WZipCallback {
 
     @Override
     public void onUnzipCompleted(String identifier) {
-        showToast("Unzip ops completed for " + identifier);
+        Log.d(MainActivity.class.getSimpleName(), "Unzip ops completed for " + identifier);
     }
 
     @Override
     public void onError(Throwable throwable, String identifier) {
         showToast(throwable.getMessage());
+        Log.e(MainActivity.class.getSimpleName(), throwable.getMessage(), throwable);
     }
 
     private void showToast(String text) {
         runOnUiThread(() -> Toast.makeText(MainActivity.this, text, Toast.LENGTH_SHORT).show());
     }
 
-    private void createDummyFiles(final int count) {
+    private void createDummyFiles() {
 
         int fileIndex = 0;
-        while (fileIndex != count) {
+        while (fileIndex != 2) {
 
             try {
-                FileOutputStream fos = new FileOutputStream(new File(
-                        Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "test_" + fileIndex + ".txt"));
+
+                File dummyFile = new File(Environment.getExternalStorageDirectory().getAbsolutePath()
+                        + File.separator + "misdir" + File.separator + "test_" + fileIndex + ".txt");
+
+                boolean r = new File(dummyFile.getParent()).mkdirs();
+                r = dummyFile.createNewFile();
+
+                FileOutputStream fos = new FileOutputStream(dummyFile);
 
                 byte[] data = ("This is a string test." + fileIndex).getBytes();
                 int repeat = 1000;

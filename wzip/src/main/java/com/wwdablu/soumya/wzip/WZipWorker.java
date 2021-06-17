@@ -1,6 +1,7 @@
 package com.wwdablu.soumya.wzip;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
+
 import android.util.Log;
 
 import java.io.BufferedInputStream;
@@ -13,36 +14,31 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-class WZipWorker extends Thread {
+class WZipWorker extends BaseWorker {
 
     private static final int BUFFER = 256 * 1024;
-
-    private List<File> mFileList;
-    private File mDestination;
-    private String mWorkerId;
-    private WZipCallback mCallback;
 
     WZipWorker(@NonNull List<File> fileList,
                @NonNull File destinationFolder,
                @NonNull String workerId,
                @NonNull WZipCallback callback) {
 
-        mFileList = fileList;
-        mDestination = destinationFolder;
-        mWorkerId = workerId;
-        mCallback = callback;
+        super(fileList, destinationFolder, workerId, callback);
     }
 
     @Override
     public void run() {
 
         ZipOutputStream zipOutputStream = null;
-        mCallback.onStarted(mWorkerId);
 
         try {
 
+            mCallback.onStarted(mWorkerIdentifier);
+            createDestinationFolderIfMissing(new File(mDestinationFolder.getAbsolutePath().substring(0,
+                    mDestinationFolder.getAbsolutePath().lastIndexOf(File.separator))));
+
             BufferedInputStream bufferedInputStream;
-            zipOutputStream = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(mDestination)));
+            zipOutputStream = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(mDestinationFolder)));
             byte[] data = new byte[BUFFER];
 
             for (File file : mFileList) {
@@ -62,10 +58,10 @@ class WZipWorker extends Thread {
                 bufferedInputStream.close();
             }
 
-            mCallback.onZipCompleted(mDestination, mWorkerId);
+            mCallback.onZipCompleted(mDestinationFolder, mWorkerIdentifier);
 
         } catch (Throwable throwable) {
-            mCallback.onError(throwable, mWorkerId);
+            mCallback.onError(throwable, mWorkerIdentifier);
 
         } finally {
 
