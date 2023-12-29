@@ -23,6 +23,8 @@ import java.util.LinkedList;
 
 public class MainActivity extends AppCompatActivity implements WZipCallback {
 
+    private static final String TAG = MainActivity.class.getSimpleName();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,51 +76,10 @@ public class MainActivity extends AppCompatActivity implements WZipCallback {
         }
 
         //Perform the zip operation
-        WZip wZip = new WZip();
-        wZip.zip(fileList,
+        WZip.zip(fileList,
                 new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "misdir" + File.separator + "test.zip"),
-                "zip",
+                "Zipper",
                 this);
-    }
-
-    @Override
-    public void onStarted(String identifier) {
-        Log.d(MainActivity.class.getSimpleName(), "Started: " + identifier);
-    }
-
-    @Override
-    public void onZipCompleted(File zipFile, String identifier) {
-        Log.d(MainActivity.class.getSimpleName(), "Zip ops completed for identifier " + identifier);
-
-        File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath());
-        File[] files = file.listFiles();
-        for (File f : files) {
-
-            if(f.getName().contains("test_") && f.getName().endsWith(".txt")) {
-                f.delete();
-            }
-        }
-
-        //Wait for 1500 msec to test unzip ops
-        new Handler(MainActivity.this.getMainLooper()).postDelayed(() -> {
-            WZip wZip = new WZip();
-            Log.d(MainActivity.class.getSimpleName(), "File count: " + wZip.getFilesInfoFromZip(zipFile).size());
-            wZip.unzip(zipFile,
-                    new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "misdirunzip"),
-                    "unzip",
-                    MainActivity.this);
-        }, 1500);
-    }
-
-    @Override
-    public void onUnzipCompleted(String identifier) {
-        Log.d(MainActivity.class.getSimpleName(), "Unzip ops completed for " + identifier);
-    }
-
-    @Override
-    public void onError(Throwable throwable, String identifier) {
-        showToast(throwable.getMessage());
-        Log.e(MainActivity.class.getSimpleName(), throwable.getMessage(), throwable);
     }
 
     private void showToast(String text) {
@@ -134,6 +95,8 @@ public class MainActivity extends AppCompatActivity implements WZipCallback {
 
                 File dummyFile = new File(Environment.getExternalStorageDirectory().getAbsolutePath()
                         + File.separator + "misdir" + File.separator + "test_" + fileIndex + ".txt");
+
+                String s = dummyFile.getParent();
 
                 boolean r = new File(dummyFile.getParent()).mkdirs();
                 r = dummyFile.createNewFile();
@@ -154,5 +117,46 @@ public class MainActivity extends AppCompatActivity implements WZipCallback {
 
             fileIndex++;
         }
+    }
+
+    @Override
+    public void onStart(@NonNull String worker, @NonNull Mode mode) {
+        Log.d(TAG, "onStart: " + mode.name() + " has been started for " + worker);
+    }
+
+    @Override
+    public void onZipComplete(@NonNull String worker, @NonNull File zipFile) {
+
+        Log.d(MainActivity.class.getSimpleName(), "Zip ops completed for identifier " + worker);
+        showToast("Zip ops completed for identifier " + worker);
+
+        File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath());
+        File[] files = file.listFiles();
+        for (File f : files) {
+
+            if(f.getName().contains("test_") && f.getName().endsWith(".txt")) {
+                f.delete();
+            }
+        }
+
+        Log.d(MainActivity.class.getSimpleName(), "File count: " + WZip.getFilesInfoFromZip(zipFile).size());
+        WZip.unzip(zipFile,
+                new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "misdirunzip"),
+                "Unzipper",
+                MainActivity.this);
+
+        showToast("Extracting files");
+    }
+
+    @Override
+    public void onUnzipComplete(@NonNull String worker, @NonNull File extractedFolder) {
+        Log.d(TAG, "onUnzipComplete: " + worker + " has done unzip at " + extractedFolder.getAbsolutePath());
+        showToast(worker + " has done unzip at " + extractedFolder.getAbsolutePath());
+    }
+
+    @Override
+    public void onError(@NonNull String worker, @NonNull Exception e, @NonNull Mode mode) {
+        Log.d(TAG, "onError: " + worker + " has encountered an exception " + e.getMessage() +
+                " during " + mode.name());
     }
 }
