@@ -42,3 +42,6 @@ fun onZipComplete(worker: String, zipFile: DocumentFile)
 fun onUnzipComplete(worker: String, extractedFolder: DocumentFile)
 fun onError(worker: String, e: Exception, mode: Mode)
 ~~~
+  
+## Note
+It uses DocumentFile for access to the files and creating the ZIP file.
