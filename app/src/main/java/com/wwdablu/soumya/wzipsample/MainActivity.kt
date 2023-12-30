@@ -2,10 +2,13 @@ package com.wwdablu.soumya.wzipsample
 
 import android.os.Bundle
 import android.os.Environment
+import android.os.SystemClock
 import android.util.Log
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.documentfile.provider.DocumentFile
+import com.wwdablu.soumya.wzip.WZip
 import com.wwdablu.soumya.wzip.WZip.Companion.unzip
 import com.wwdablu.soumya.wzip.WZip.Companion.zip
 import com.wwdablu.soumya.wzip.WZipCallback
@@ -19,6 +22,8 @@ class MainActivity : AppCompatActivity(), WZipCallback {
     }
 
     private fun prepare() {
+
+        showConsole("All files present under Documents folder")
 
         //Create dummy files for testing
         createDummyFiles()
@@ -39,8 +44,10 @@ class MainActivity : AppCompatActivity(), WZipCallback {
         }
     }
 
-    private fun showToast(text: String) {
-        runOnUiThread { Toast.makeText(this@MainActivity, text, Toast.LENGTH_SHORT).show() }
+    private fun showConsole(text: String) {
+        runOnUiThread {
+            findViewById<TextView>(R.id.tv_output).append("\n$text")
+        }
     }
 
     private fun createDummyFiles() {
@@ -55,6 +62,7 @@ class MainActivity : AppCompatActivity(), WZipCallback {
                         it.renameTo("test_$fileIndex.txt")
                         contentResolver.openOutputStream(it.uri)
                             .use { os -> os!!.write("Hello World".toByteArray()) }
+                        showConsole("Created dummy file: ${it.name}")
                     }
                 }
 
@@ -71,19 +79,19 @@ class MainActivity : AppCompatActivity(), WZipCallback {
 
     override fun onZipComplete(worker: String, zipFile: DocumentFile) {
         Log.d(MainActivity::class.java.simpleName, "Zip ops completed for identifier $worker")
-        showToast("Zip ops completed for identifier " + worker + " for " + zipFile.name)
+        showConsole("Zip ops completed for identifier " + worker + " for " + zipFile.name)
 
         val testDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
         DocumentFile.fromFile(testDir).createDirectory("msdir_extracted")?.let {
             unzip(this, zipFile, it, "Unzipper", this)
         }
 
-        showToast("Extracting files")
+        showConsole("Extracting files")
     }
 
     override fun onUnzipComplete(worker: String, extractedFolder: DocumentFile) {
         Log.d(TAG, "onUnzipComplete: " + worker + " has done unzip at " + extractedFolder.name)
-        showToast(worker + " has done unzip at " + extractedFolder.name)
+        showConsole(worker + " has done unzip at " + extractedFolder.name)
     }
 
     override fun onError(worker: String, e: Exception, mode: WZipCallback.Mode) {

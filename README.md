@@ -13,33 +13,32 @@ dependencies {
 ~~~  
 
 ## Usage  
-wZip library provides only 3 methods as of now. These methods are:  
+wZip library provides only 2 methods:  
 * zip  
-* unzip  
-* getFilesInfoFromZip - Provides the file entry information  
+* unzip   
 
 The process to generate a zip archive is to provide the list of files and the destination where the zip is to be generated.  
 ~~~  
-WZip wZip = new WZip();
-wZip.zip(fileList,
-    new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "test.zip"),
-    "bitmapZipper",
-    wZipCallback);
+zip(this@MainActivity, // Context
+    dfList,            // List of DocumentFile pointing to the individual files
+    it,                // DocumentFile pointing to the zip file to be created
+    "Zipper",          // Name of the zip process
+    this@MainActivity) // Callback implementation
 ~~~  
 
 The process to unzip the contents and extract them to a folder is:  
 ~~~  
-WZip wZip = new WZip();
-wZip.unzip(zipFile,
-        new File(Environment.getExternalStorageDirectory().getAbsolutePath()),
-        "backupUnzipper",
-        wZipCallback);
+unzip(this@MainActivity, // Context
+      zipFile,           // DOcumentFile pointing to the zip file
+      it,                // DocumentFile pointing to the directory to be extracted into
+      "Unzipper",        // Name of the zip process
+      this@MainActivity) // Callback implementation
 ~~~  
 
 wZip also provides 4 callback methods to notify the states of the process.  
 ~~~  
-void onStarted(String identifier);
-void onZipCompleted(File zipFile, String identifier);
-void onUnzipCompleted(String identifier);
-void onError(Throwable throwable, String identifier);
+fun onStart(worker: String, mode: Mode)
+fun onZipComplete(worker: String, zipFile: DocumentFile)
+fun onUnzipComplete(worker: String, extractedFolder: DocumentFile)
+fun onError(worker: String, e: Exception, mode: Mode)
 ~~~
