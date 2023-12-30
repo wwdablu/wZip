@@ -1,7 +1,10 @@
 package com.wwdablu.soumya.wzip
 
+import android.content.Context
+import androidx.documentfile.provider.DocumentFile
 import java.io.File
 import java.io.FileInputStream
+import java.security.InvalidParameterException
 import java.util.LinkedList
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
@@ -12,20 +15,31 @@ class WZip {
 
         /**
          * Method creates a new background thread for every zip call
-         * @param fileList List of files to zip
-         * @param destinationFolder Destination where the zip file is to be created. Ensure valid.
+         * @param filesAndDirectories List of files to zip
+         * @param destinationFile Destination where the zip file is to be created. Ensure valid.
          * @param workerIdentifier Background thread identifier
          * @param callback Callback method
          */
         @JvmStatic
         fun zip(
-            fileList: List<File>,
-            destinationFolder: File,
+            context: Context,
+            filesAndDirectories: List<DocumentFile>,
+            destinationFile: DocumentFile,
             workerIdentifier: String,
             callback: WZipCallback
         ) {
-            WZipWorker(fileList, destinationFolder, workerIdentifier, callback).run {
-                start()
+            if(filesAndDirectories.isNotEmpty() && destinationFile.isFile && destinationFile.exists()) {
+                WZipWorker(
+                    context,
+                    filesAndDirectories,
+                    destinationFile,
+                    workerIdentifier,
+                    callback
+                ).run {
+                    start()
+                }
+            } else {
+                callback.onError(workerIdentifier, InvalidParameterException(), WZipCallback.Mode.ZIP)
             }
         }
 
@@ -38,13 +52,18 @@ class WZip {
          */
         @JvmStatic
         fun unzip(
-            zipFile: File,
-            destinationFolder: File,
+            context: Context,
+            zipFile: DocumentFile,
+            destinationFolder: DocumentFile,
             workerIdentifier: String,
             callback: WZipCallback
         ) {
-            WUnzipWorker(zipFile, destinationFolder, workerIdentifier, callback).run {
-                start()
+            if(destinationFolder.isDirectory && destinationFolder.exists() && !destinationFolder.isVirtual) {
+                WUnzipWorker(context, zipFile, destinationFolder, workerIdentifier, callback).run {
+                    start()
+                }
+            } else {
+                callback.onError(workerIdentifier, InvalidParameterException(), WZipCallback.Mode.UNZIP)
             }
         }
 
@@ -54,14 +73,15 @@ class WZip {
          * @return List of files with their details
          */
         @JvmStatic
-        fun getFilesInfoFromZip(zipFile: File): List<ZipEntry> {
+        fun getFilesInfoFromZip(context: Context, zipFile: DocumentFile): List<ZipEntry> {
+
             val fileList = LinkedList<ZipEntry>()
 
-            ZipInputStream(FileInputStream(zipFile)).use { zis ->
+            ZipInputStream(context.contentResolver.openInputStream(zipFile.uri)).use { zis ->
                 var zipEntry: ZipEntry?
                 do {
                     zipEntry = zis.nextEntry
-                    fileList.add(zipEntry)
+                    if(zipEntry != null) fileList.add(zipEntry)
                 } while (zipEntry != null)
             }
 
