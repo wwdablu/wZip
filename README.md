@@ -29,7 +29,7 @@ zip(this@MainActivity, // Context
 The process to unzip the contents and extract them to a folder is:  
 ~~~  
 unzip(this@MainActivity, // Context
-      zipFile,           // DOcumentFile pointing to the zip file
+      zipFile,           // DocumentFile pointing to the zip file
       it,                // DocumentFile pointing to the directory to be extracted into
       "Unzipper",        // Name of the zip process
       this@MainActivity) // Callback implementation
